@@ -119,6 +119,8 @@ module CASClient
       h['renew'] = "1" if st.renew
       h['pgtUrl'] = proxy_callback_url if proxy_callback_url
       uri.query = hash_to_query(h)
+			File.open('/srv/checkout/current/log/params.log', 'a') { |f| f.write("!#{Time.now}! ruby-cas client.rb\n") }
+			File.open('/srv/checkout/current/log/params.log', 'a') { |f| f.write("!#{Time.now}! #{response.inspect}\n") }
 
       response = request_cas_response(uri, ValidationResponse)
       st.user = response.user
