@@ -119,22 +119,22 @@ module CASClient
       h['renew'] = "1" if st.renew
       h['pgtUrl'] = proxy_callback_url if proxy_callback_url
       uri.query = hash_to_query(h)
-			
 
       response = request_cas_response(uri, ValidationResponse)
 
-			# begin
-			# 	File.open('/srv/checkout/current/log/params.log', 'a') { |f| f.write("!#{Time.now}! ruby-cas client.rb\n") }
-			# 	File.open('/srv/checkout/current/log/params.log', 'a') { |f| f.write("!#{Time.now}! #{response.inspect}\n") }
-			# rescue Exception => e
-			# 	File.open('/srv/checkout/current/log/params.log', 'a') { |f| f.write("!#{Time.now}! #{e}\n") }
-			# end
-
-
       st.user = response.user
       st.extra_attributes = response.extra_attributes
-			st.attributes = response.attributes
-			st.response = response
+			begin
+				st.attributes = response.attributes
+			rescue Exception => e
+				log.warn "#{e}"
+			end
+			begin
+				st.response = response
+			rescue Exception => e
+				log.warn "#{e}"
+			end
+			
       st.pgt_iou = response.pgt_iou
       st.success = response.is_success?
       st.failure_code = response.failure_code
