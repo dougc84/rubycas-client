@@ -2,7 +2,7 @@ module CASClient
   # Represents a CAS service ticket.
   class ServiceTicket
     attr_reader :ticket, :service, :renew
-    attr_accessor :user, :extra_attributes, :pgt_iou, :success, :failure_code, :failure_message
+    attr_accessor :user, :extra_attributes, :pgt_iou, :success, :failure_code, :failure_message, :response, :attributes
     
     def initialize(ticket, service, renew = false)
       @ticket = ticket

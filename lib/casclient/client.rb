@@ -123,16 +123,18 @@ module CASClient
 
       response = request_cas_response(uri, ValidationResponse)
 
-			begin
-				File.open('/srv/checkout/current/log/params.log', 'a') { |f| f.write("!#{Time.now}! ruby-cas client.rb\n") }
-				File.open('/srv/checkout/current/log/params.log', 'a') { |f| f.write("!#{Time.now}! #{response.inspect}\n") }
-			rescue Exception => e
-				File.open('/srv/checkout/current/log/params.log', 'a') { |f| f.write("!#{Time.now}! #{e}\n") }
-			end
+			# begin
+			# 	File.open('/srv/checkout/current/log/params.log', 'a') { |f| f.write("!#{Time.now}! ruby-cas client.rb\n") }
+			# 	File.open('/srv/checkout/current/log/params.log', 'a') { |f| f.write("!#{Time.now}! #{response.inspect}\n") }
+			# rescue Exception => e
+			# 	File.open('/srv/checkout/current/log/params.log', 'a') { |f| f.write("!#{Time.now}! #{e}\n") }
+			# end
 
 
       st.user = response.user
       st.extra_attributes = response.extra_attributes
+			st.attributes = response.attributes
+			st.response = response
       st.pgt_iou = response.pgt_iou
       st.success = response.is_success?
       st.failure_code = response.failure_code
