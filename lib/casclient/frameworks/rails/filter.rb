@@ -2,7 +2,7 @@ module CASClient
   module Frameworks
     module Rails
       class Filter
-        cattr_reader :config, :log, :client, :fake_user, :fake_extra_attribues
+        cattr_reader :config, :log, :client, :fake_user, :fake_extra_attributes
         
         # These are initialized when you call configure.
         @@config = nil
@@ -11,6 +11,10 @@ module CASClient
         @@fake_user = nil
         @@fake_extra_attributes = nil
         
+        def self.before(controller)
+          self.filter controller
+        end
+
         class << self
           def filter(controller)
             raise "Cannot use the CASClient filter because it has not yet been configured." if config.nil?
@@ -26,7 +30,7 @@ module CASClient
             last_st_service = controller.session[:cas_last_valid_ticket_service]
             
             if single_sign_out(controller)
-              controller.send(:render, :text => "CAS Single-Sign-Out request intercepted.")
+              controller.send(:render, text: "CAS Single-Sign-Out request intercepted.")
               return false 
             end
 

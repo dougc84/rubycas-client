@@ -5,7 +5,7 @@ module CASClient
     
     def check_and_parse_xml(raw_xml)
       begin
-        doc = REXML::Document.new(raw_xml)
+        doc = REXML::Document.new(raw_xml, raw: :all)
       rescue REXML::ParseException => e
         raise BadResponseException, 
           "MALFORMED CAS RESPONSE:\n#{raw_xml.inspect}\n\nEXCEPTION:\n#{e}"
@@ -36,8 +36,8 @@ module CASClient
     end
     
     def parse(raw_text, options)
-      raise BadResponseException, 
-        "CAS response is empty/blank." if raw_text.blank?
+      raise BadResponseException,
+        "CAS response is empty/blank." if raw_text.to_s.empty?
       @parse_datetime = Time.now
       if raw_text =~ /^(yes|no)\n(.*?)\n$/m
         @protocol = 1.0
@@ -67,7 +67,12 @@ module CASClient
         @extra_attributes = {}
         @xml.elements.to_a('//cas:authenticationSuccess/cas:attributes/* | //cas:authenticationSuccess/*[local-name() != \'proxies\' and local-name() != \'proxyGrantingTicket\' and local-name() != \'user\' and local-name() != \'attributes\']').each do |el|
           inner_text = el.cdatas.length > 0 ? el.cdatas.join('') : el.text
-          @extra_attributes.merge! el.name => inner_text
+          name = el.name
+          unless (attrs = el.attributes).empty?
+            name = attrs['name']
+            inner_text = attrs['value']
+          end
+          @extra_attributes.merge! name => inner_text
         end
         
         # unserialize extra attributes
@@ -84,14 +89,14 @@ module CASClient
     end
 
     def parse_extra_attribute_value(value, encode_extra_attributes_as)
-      attr_value = if value.blank?
+      attr_value = if value.to_s.empty?
         nil
       elsif !encode_extra_attributes_as
         begin
-            YAML.load(value)
-          rescue ArgumentError
-            raise ArgumentError, "Did not find :encode_extra_attributes_as config parameter, hence default encoding scheme is YAML but CAS response recieved in encoded differently "
-          end
+          YAML.load(value)
+        rescue ArgumentError => e
+          raise ArgumentError, "Error parsing extra attribute with value #{value} as YAML: #{e}"
+        end
       else
         if encode_extra_attributes_as == :json
           begin
@@ -99,12 +104,17 @@ module CASClient
           rescue JSON::ParserError
             value
           end
+        elsif encode_extra_attributes_as == :raw
+          value
         else
           YAML.load(value)
         end
       end
 
-      unless (attr_value.kind_of? Enumerable) || attr_value.nil?
+      unless attr_value.kind_of?(Enumerable) ||
+      attr_value.kind_of?(TrueClass) ||
+      attr_value.kind_of?(FalseClass) ||
+      attr_value.nil?
         attr_value.to_s
       else
         attr_value
@@ -133,7 +143,7 @@ module CASClient
     
     def parse(raw_text)
       raise BadResponseException, 
-        "CAS response is empty/blank." if raw_text.blank?
+        "CAS response is empty/blank." if raw_text.to_s.empty?
       @parse_datetime = Time.now
       
       @xml = check_and_parse_xml(raw_text)
@@ -183,8 +193,15 @@ module CASClient
       if location =~ /ticket=([^&]+)/
         @ticket = $~[1]
       end
+
+      # Legacy check. CAS Server used to return a 200 (Success) or a 302 (Found) on successful authentication.
+      # This behavior should be deprecated at some point in the future.
+      legacy_valid_ticket = (http_response.kind_of?(Net::HTTPSuccess) || http_response.kind_of?(Net::HTTPFound)) && @ticket.present?
       
-      if not ((http_response.kind_of?(Net::HTTPSuccess) || http_response.kind_of?(Net::HTTPFound)) && @ticket.present?)
+      # If using rubycas-server 1.1.0+
+      valid_ticket = http_response.kind_of?(Net::HTTPSeeOther) && @ticket.present?
+      
+      if !legacy_valid_ticket && !valid_ticket
         @failure = true
         # Try to extract the error message -- this only works with RubyCAS-Server.
         # For other servers we just return the entire response body (i.e. the whole error page).
@@ -200,7 +217,7 @@ module CASClient
     end
     
     def is_success?
-      !@failure && !ticket.blank?
+      !@failure && !ticket.to_s.empty?
     end
     
     def is_failure?

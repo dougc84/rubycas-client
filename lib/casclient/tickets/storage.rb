@@ -2,14 +2,13 @@ module CASClient
   module Tickets
     module Storage
       class AbstractTicketStore
-
         attr_accessor :log
+
         def log
           @log ||= CASClient::LoggerWrapper.new
         end
 
         def process_single_sign_out(st)
-
           session_id, session = get_session_for_service_ticket(st)
           if session
             session.destroy
@@ -29,7 +28,8 @@ module CASClient
           session_id = read_service_session_lookup(st)
           unless session_id.nil?
             # This feels a bit hackish, but there isn't really a better way to go about it that I am aware of yet
-            session = ActiveRecord::SessionStore.session_class.find_by_session_id(session_id)
+            # session = ActiveRecord::SessionStore.session_class.find_by_session_id(session_id)
+            session = ActiveRecord::SessionStore.session_class.find(:first, conditions: { session_id: session_id })
           else
             log.warn("Couldn't destroy session service ticket #{st} because no corresponding session id could be found.")
           end

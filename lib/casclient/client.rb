@@ -44,7 +44,8 @@ module CASClient
         when :local_dir_ticket_store, nil
           CASClient::Tickets::Storage::LocalDirTicketStore
         when :active_record_ticket_store
-          ::ACTIVE_RECORD_TICKET_STORE
+          require 'casclient/tickets/storage/active_record_ticket_store'
+          CASClient::Tickets::Storage::ActiveRecordTicketStore
         else
           conf[:ticket_store]
       end
@@ -121,20 +122,22 @@ module CASClient
       uri.query = hash_to_query(h)
 
       response = request_cas_response(uri, ValidationResponse)
-
       st.user = response.user
       st.extra_attributes = response.extra_attributes
-			begin
-				st.attributes = response.attributes
-			rescue Exception => e
-				log.warn "#{e}"
-			end
-			begin
-				st.response = response
-			rescue Exception => e
-				log.warn "#{e}"
-			end
-			
+      
+      # DC: set attributes and response
+      begin
+        st.attributes = response.attributes
+      rescue Exception => e
+        log.warn "#{e}"
+      end
+      
+      begin
+        st.response = response
+      rescue Exception => e
+        log.warn "#{e}"
+      end
+      
       st.pgt_iou = response.pgt_iou
       st.success = response.is_success?
       st.failure_code = response.failure_code
@@ -171,12 +174,12 @@ module CASClient
     # returns a LoginResponse object.
     def login_to_service(credentials, service)
       lt = request_login_ticket
-
+      
       data = credentials.merge(
-        :lt => lt,
-        :service => service
+        lt: lt,
+        service: service
       )
-
+      
       res = submit_data_to_cas(login_url, data)
       response = CASClient::LoginResponse.new(res)
 

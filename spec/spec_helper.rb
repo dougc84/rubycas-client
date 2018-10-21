@@ -1,6 +1,6 @@
 require 'bundler'
 Bundler.setup(:default, :development)
-require 'simplecov' unless ENV['TRAVIS']
+require 'simplecov' unless ENV['TRAVIS'] || defined?(JRUBY_VERSION)
 Bundler.require
 
 require 'rubycas-client'
@@ -17,6 +17,11 @@ RSpec.configure do |config|
   config.mock_with :rspec
   config.mock_framework = :rspec
   config.include ActionControllerHelpers
+
+  config.treat_symbols_as_metadata_keys_with_true_values = true
+  config.filter_run_including :focus
+  config.run_all_when_everything_filtered = true
+  config.fail_fast = false
 
   config.before(:suite) do
     ActiveRecordHelpers.setup_active_record

@@ -1,3 +1,16 @@
+= In Need of New Maintainer
+
+Unfortunately, those of us who have been maintaining this project no longer have time to give it the attention it needs. If you are interested in taking over maintainence of it, please let us know!
+
+Otherwise, we recommend you consider one of the following alternatives:
+
+{rack-cas}[https://github.com/biola/rack-cas]
+
+{omniauth-cas}[https://github.com/dlindahl/omniauth-cas]
+
+{<img src="https://secure.travis-ci.org/rubycas/rubycas-client.png" alt="Build Status" />}[http://travis-ci.org/rubycas/rubycas-client]
+{<img src="https://codeclimate.com/badge.png" />}[https://codeclimate.com/github/rubycas/rubycas-client]
+
 = RubyCAS-Client 
 
 Authors::   Matt Zukowski <matt AT roughest DOT net> and Matt Campbell <matt AT soupmatt DOT com>; inspired by code by Ola Bini <ola.bini AT ki DOT se> and Matt Walker <mwalker AT tamu DOT edu>
@@ -8,7 +21,6 @@ License::   MIT License
 Websites::  http://github.com/rubycas/rubycas-client
             http://github.com/rubycas/rubycas-client/wiki
             http://rubydoc.info/github/rubycas/rubycas-client/master/frames
-Build Status:: {<img src="http://travis-ci.org/rubycas/rubycas-client.png" />}[http://travis-ci.org/rubycas/rubycas-client]
 
 === RubyCAS-Client is a Ruby client library for Yale's Central Authentication Service (CAS) protocol.
 
@@ -36,8 +48,6 @@ API documentation (i.e. the RDocs) are available at http://rubycas-client.rubyfo
 
 == Installation
 
-<b>NOTE:</b> For compatibility with Rails 3 have a look at https://github.com/zuk/rubycas-client-rails
-
 The current version of RubyCAS-Client should work with Rails 2.3.6 and up. For compatibility with
 older Rails try using an older version of the client.
 
@@ -47,7 +57,7 @@ http://rubyforge.org/projects/rubycas-client.
 However, if you're using Rails, it's easier to install the CAS client as a plugin:
 
   cd <your rails app>
-  ./script/plugin install git://github.com/gunark/rubycas-client.git
+  ./script/plugin install git://github.com/rubycas/rubycas-client.git
 
 Alternatively, the library is also installable as a RubyGem[http://rubygems.org]:
 
@@ -56,7 +66,7 @@ Alternatively, the library is also installable as a RubyGem[http://rubygems.org]
 If your Rails application is under Subversion control, you can also install the plugin as an svn:external, ensuring that
 you always have the latest bleeding-edge version of RubyCAS-Client:
 
-  ./script/plugin install -x http://svn.github.com/gunark/rubycas-client.git
+  ./script/plugin install -x http://svn.github.com/rubycas/rubycas-client.git
 
 
 == Usage Examples
@@ -64,7 +74,7 @@ you always have the latest bleeding-edge version of RubyCAS-Client:
 If you'd rather jump right in, have a look at the example Rails and Merb applications pre-configured for CAS
 authentication:
 
-http://github.com/gunark/rubycas-client/tree/master/examples
+http://github.com/rubycas/rubycas-client/tree/master/examples
 
 
 Otherwise, continue reading for a step-by-step guide for integrating RubyCAS-Client with Rails:
@@ -121,7 +131,8 @@ Here is a more complicated configuration showing most of the configuration optio
     :username_session_key => :cas_user,
     :extra_attributes_session_key => :cas_extra_attributes,
     :logger => cas_logger,
-    :enable_single_sign_out => true
+    :enable_single_sign_out => true,
+    :service_url => "https://mysite.service.com"
   )
 
 Note that normally it is not necessary to specify <tt>:login_url</tt>, <tt>:logout_url</tt>, and <tt>:validate_url</tt>.
@@ -135,6 +146,9 @@ info under <tt>session[:cas_extra_attributes]</tt>).
 
 An arbitrary Logger instance can be given as the :logger parameter. In the example above we log all CAS activity to a 
 <tt>log/cas.log</tt> file in your Rails app's directory.
+
+The service url sets the service parameter that will be sent to CAS for every authentication.  This can be useful if you are 
+implementing the single logout feature (supported by some CAS Servers) or would like to funnel all authentications through a specific action.
 
 ==== Re-authenticating on every request (i.e. the "single sign-out problem")
 
@@ -267,7 +281,7 @@ to authenticate another application:
 
   service_uri = "http://some-other-application.example.foo"
   proxy_granting_ticket = session[:cas_pgt]
-  proxy_ticket = CASClient::Frameworks::Rails::Filter.client.request_proxy_ticket(service_uri, proxy_granting_ticket)
+  proxy_ticket = CASClient::Frameworks::Rails::Filter.client.request_proxy_ticket(proxy_granting_ticket, service_uri)
   
 <tt>proxy_ticket</tt> should now contain a valid proxy ticket. You can use it to authenticate other services by sending it together with 
 the service URI as parameters to your target application:

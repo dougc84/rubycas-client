@@ -1,10 +1,33 @@
 = RubyCAS-Client Changelog
 
-== Master
+== Version 2.3.10.rc1 :: 2013-03-18
+
+* Bug Fixes
+  * Fixed bug where ActiveRecordTicketStore failed to add the service
+    ticket to the sessions table
+  * Fixed compatibility of login_to_service with rubycas-server 1.1.x (@bradseefeld)
+  * Fix an issue that prevented inspection of faked extra attributes on the filter (@yurikoval)
+  * Fix travis builds running incorrectly (@tpicket66)
+  * Remove dependency on rubycas-client-rails when Rails 3.x is being used (@KrisSiegel)
+  * Fix an issue where the Ticket Store might break under Rails 3.x
+  * Fix loading the ActiveRecordTicketStore by symbol
+
+* Other
+  * Vastly expand combinations of ruby and rails versions that are considered supported. - see .travis.yml
+
+== Version 2.3.9 :: 2012-06-20
+
+* Other
+  * ci against lots more ruby versions - see .travis.yml and the travis
+    status page
+
+== Version 2.3.9rc1 :: 2012-03-24
 
 * Bug Fixes
   * Fixed issue that caused Single Sign Out to fail (@bryanlarsen and @soorajb)
   * Fixed issue in Filter#unauthorized! (@mscottford)
+  * Fixed #38, boolean values are now preserved in extra attribute yaml
+    parsing
 
 * New functionality
   * Tweak the CasProxyCallbackController so it can be used with
@@ -12,6 +35,8 @@
   * Add support for calling the CAS Server through an HTTP proxy (@shevaun)
   * Add support for specifying the service url to be added to the
     logout url (@dyson)
+  * add support for extra attributes as xml attributes (@bhenderson)
+  * Add :raw mode to extra attribute parsing
 
 * Other
   * Made writing and running rspec tests much easier

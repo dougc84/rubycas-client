@@ -4,18 +4,19 @@ module CASClient
 
       # A Ticket Store that keeps it's ticket in database tables using ActiveRecord.
       #
-      # Services Tickets are stored in an extra column add to the ActiveRecord sessions table.
+      # Services Tickets are stored in an extra column added to the ActiveRecord sessions table.
+      # You will need to add the service_ticket column your ActiveRecord sessions table.
       # Proxy Granting Tickets and their IOUs are stored in the cas_pgtious table.
       #
       # This ticket store takes the following config parameters
       # :pgtious_table_name - the name of the table 
       class ActiveRecordTicketStore < AbstractTicketStore
-
         def initialize(config={})
           config ||= {}
           if config[:pgtious_table_name]
             CasPgtiou.set_table_name = config[:pgtious_table_name]
           end
+          ActiveRecord::SessionStore.session_class = ServiceTicketAwareSession
         end
 
         def store_service_session_lookup(st, controller)
@@ -43,7 +44,7 @@ module CASClient
         def save_pgt_iou(pgt_iou, pgt)
           raise CASClient::CASException.new("Invalid pgt_iou") if pgt_iou.nil?
           raise CASClient::CASException.new("Invalid pgt") if pgt.nil?
-          pgtiou = CasPgtiou.create(:pgt_iou => pgt_iou, :pgt_id => pgt)
+          pgtiou = CasPgtiou.create(pgt_iou: pgt_iou, pgt_id: pgt)
         end
 
         def retrieve_pgt(pgt_iou)
@@ -57,12 +58,20 @@ module CASClient
           pgtiou.destroy
 
           pgt
-
         end
-
       end
 
-      ::ACTIVE_RECORD_TICKET_STORE = ActiveRecordTicketStore
+      ACTIVE_RECORD_TICKET_STORE = ActiveRecordTicketStore
+
+      class ServiceTicketAwareSession < ActiveRecord::SessionStore::Session
+        before_save :save_service_ticket
+
+        def save_service_ticket
+          if data[:service_ticket]
+            self.service_ticket = data[:service_ticket]
+          end
+        end
+      end
 
       class CasPgtiou < ActiveRecord::Base
         #t.string :pgt_iou, :null => false
